@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SololearnTestApp</string>
+    <string name="util_exception_instantiation">Utils class can not be instantiated</string>
+</resources>
