@@ -1,35 +1,24 @@
 package com.golendukhin.YevaSololearn;
 
-import java.net.URL;
-
-public class Feed {
+class Feed {
     private String title, category;
-    //private URL imageURL;
-    //private String imageUrl;
-    int image;
+    private String imageUrl;
 
-    public Feed(String title, String category, int image){
+    Feed(String title, String category, String imageUrl){
         this.title = title;
         this.category = category;
-        //this.imageURL = QueryUtils.createUrl(sImageURL);
-        this.image = image;
-
-
+        this.imageUrl = imageUrl;
     }
 
-    public String getTitle() {
+    String getTitle() {
         return title;
     }
 
-    public String getCategory() {
+    String getCategory() {
         return category;
     }
 
-    //public URL getImageURL() {
-        //return imageURL;
-    //}
-
-    public int getImageUrl() {
-        return image;
+    String getImageUrl() {
+        return imageUrl;
     }
 }
