@@ -1,13 +1,13 @@
 package com.golendukhin.YevaSololearn;
 
 class Feed {
-    private String title, category;
-    private String imageUrl;
+    private String title, category, imageUrl, id;
 
-    Feed(String title, String category, String imageUrl){
+    Feed(String title, String category, String imageUrl, String id){
         this.title = title;
         this.category = category;
         this.imageUrl = imageUrl;
+        this.id = id;
     }
 
     String getTitle() {
@@ -21,4 +21,6 @@ class Feed {
     String getImageUrl() {
         return imageUrl;
     }
+
+    String getId() { return id; }
 }

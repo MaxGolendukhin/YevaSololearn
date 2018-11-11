@@ -1,6 +1,7 @@
 package com.golendukhin.YevaSololearn;
 
 import android.app.usage.StorageStatsManager;
+import android.os.Handler;
 import android.support.v4.widget.CircularProgressDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,20 +27,21 @@ import org.json.JSONObject;
 
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class FeedActivity extends AppCompatActivity {
 
     private static final int NUM_COLUMNS = 3;
+    private static final int INTERVAL = 15000;
 
     private ArrayList<Feed> feedItems = new ArrayList<>();
-    private ReferenceQueue referenceQueue;
-    private JsonArrayRequest jsonArrayRequest;
     private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter;
     private ProgressBar progressBar;
 
 
     private static final String GUARDIAN_REQUEST_URL =
-            "https://content.guardianapis.com/search?q=Armenia&api-key=test&show-fields=thumbnail&from-date=2018-01-01&page-size=100";
+            "https://content.guardianapis.com/search?q&api-key=test&show-fields=thumbnail&from-date=2018-01-01&orderBy=newest&page-size=10";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,12 +54,30 @@ public class FeedActivity extends AppCompatActivity {
 
     private void initStaggeredRecyclerVIewAdapter() {
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
-        jsonRequest();
+        runTicker();
         staggeredRecyclerViewAdapter = new StaggeredRecyclerViewAdapter(feedItems, this);
         StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
         recyclerView.setAdapter(staggeredRecyclerViewAdapter);
         staggeredRecyclerViewAdapter.notifyDataSetChanged();
+    }
+
+    private void runTicker() {
+        final Handler handler = new Handler();
+        Timer timer = new Timer(false);
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        jsonRequest();
+                    }
+                });
+
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, 0, INTERVAL);
     }
 
     private void jsonRequest() {
@@ -80,7 +100,12 @@ public class FeedActivity extends AppCompatActivity {
                             JSONObject fields = item.getJSONObject("fields");
                             String imageUrl = fields.getString("thumbnail");
 
-                            feedItems.add(new Feed(title, category, imageUrl));
+                            String id = item.getString("id");
+
+                            Feed newFeed = new Feed(title, category, imageUrl, id);
+                            if (!isInFeedList(newFeed)) {
+                                feedItems.add(newFeed);
+                            }
                         }
                     } catch (JSONException e){
                         e.printStackTrace();
@@ -102,4 +127,13 @@ public class FeedActivity extends AppCompatActivity {
         });
         requestQueue.add(jsonObjectRequest);
     }
+
+    private boolean isInFeedList(Feed newFeed) {
+        for (Feed feed : feedItems) {
+            if (feed.getId().equals(newFeed.getId())) return true;
+        }
+        return false;
+    }
+
+
 }
