@@ -1,6 +1,8 @@
 package com.golendukhin.YevaSololearn;
 
-class Feed {
+import java.io.Serializable;
+
+class Feed implements Serializable {
     private String title, category, imageUrl, id;
 
     Feed(String title, String category, String imageUrl, String id){

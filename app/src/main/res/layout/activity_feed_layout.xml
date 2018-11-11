@@ -14,7 +14,7 @@
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="2dp"></android.support.v7.widget.RecyclerView>
+        tools:layout_editor_absoluteY="2dp"/>
 
     <ProgressBar
         android:id="@+id/progress_bar"

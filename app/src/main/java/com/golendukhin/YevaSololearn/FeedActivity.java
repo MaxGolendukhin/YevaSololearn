@@ -1,23 +1,23 @@
 package com.golendukhin.YevaSololearn;
 
-import android.app.usage.StorageStatsManager;
+
 import android.os.Handler;
-import android.support.v4.widget.CircularProgressDrawable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
+import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -25,32 +25,36 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class FeedActivity extends AppCompatActivity {
+    //@BindView(R.id.toolbar_like_button) Button toolbarLikeButton;
+    //@BindView(R.id.toolbar_back_button) Button toolbarBackButton;
+    //@BindView(R.id.toolbar_category_text_view) TextView toolbarTitleTextView;
 
     private static final int NUM_COLUMNS = 3;
-    private static final int INTERVAL = 15000;
+    private static final int INTERVAL = 30000;
 
     private ArrayList<Feed> feedItems = new ArrayList<>();
     private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter;
     private ProgressBar progressBar;
 
-
     private static final String GUARDIAN_REQUEST_URL =
-            "https://content.guardianapis.com/search?q&api-key=test&show-fields=thumbnail&from-date=2018-01-01&orderBy=newest&page-size=10";
+            "https://content.guardianapis.com/search?q&api-key=test&show-fields=thumbnail&from-date=2018-01-01&orderBy=newest&page-size=50";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_feed);
-
+        setContentView(R.layout.activity_feed_layout);
+        //ButterKnife.bind(this);
+        invalidateMenu();
         initStaggeredRecyclerVIewAdapter();
     }
-
 
     private void initStaggeredRecyclerVIewAdapter() {
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
@@ -135,5 +139,35 @@ public class FeedActivity extends AppCompatActivity {
         return false;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putSerializable("feedItems", feedItems);
+    }
 
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        feedItems = (ArrayList<Feed>) savedInstanceState.getSerializable("feedItems");
+        initStaggeredRecyclerVIewAdapter();
+    }
+
+    private void invalidateMenu() {
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayShowHomeEnabled(false);
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // TODO Auto-generated method stub
+
+//        menu.add("menu1");
+//        menu.add("menu2");
+//        menu.add("menu3");
+//        menu.add("menu4");
+
+        return super.onCreateOptionsMenu(menu);
+    }
 }
