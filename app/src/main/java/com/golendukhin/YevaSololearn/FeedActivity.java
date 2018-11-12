@@ -1,6 +1,5 @@
 package com.golendukhin.YevaSololearn;
 
-
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -9,10 +8,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
@@ -29,14 +28,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class FeedActivity extends AppCompatActivity {
-    //@BindView(R.id.toolbar_like_button) Button toolbarLikeButton;
-    //@BindView(R.id.toolbar_back_button) Button toolbarBackButton;
-    //@BindView(R.id.toolbar_category_text_view) TextView toolbarTitleTextView;
-
     private static final int NUM_COLUMNS = 3;
     private static final int INTERVAL = 30000;
 
@@ -47,11 +39,12 @@ public class FeedActivity extends AppCompatActivity {
     private static final String GUARDIAN_REQUEST_URL =
             "https://content.guardianapis.com/search?q&api-key=test&show-fields=thumbnail&from-date=2018-01-01&orderBy=newest&page-size=50";
 
+    private boolean isPinterestStyle = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed_layout);
-        //ButterKnife.bind(this);
         invalidateMenu();
         initStaggeredRecyclerVIewAdapter();
     }
@@ -78,7 +71,6 @@ public class FeedActivity extends AppCompatActivity {
                         jsonRequest();
                     }
                 });
-
             }
         };
         timer.scheduleAtFixedRate(timerTask, 0, INTERVAL);
@@ -115,9 +107,8 @@ public class FeedActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-
                 //Log.e("!!!!!!!!!!!!!!!!!!!!!", String.valueOf(feedItems.size()));
-                //freaky bug if adapter is set, but data is still not fetched, need to update adapter
+                //weird bug if adapter is set, but data is still not fetched, need to update adapter
                 if (staggeredRecyclerViewAdapter != null)
                     staggeredRecyclerViewAdapter.notifyDataSetChanged();
                 progressBar.setVisibility(View.INVISIBLE);
@@ -156,18 +147,32 @@ public class FeedActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowHomeEnabled(false);
-
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // TODO Auto-generated method stub
-
-//        menu.add("menu1");
-//        menu.add("menu2");
-//        menu.add("menu3");
-//        menu.add("menu4");
-
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.feed_activity_menu, menu);
+        MenuItem pinterestStyleMenu = menu.findItem(R.id.pinterest_style_menu);
+        MenuItem listStyleMenu = menu.findItem(R.id.list_style_menu);
+        pinterestStyleMenu.setVisible(isPinterestStyle);
+        listStyleMenu.setVisible(!isPinterestStyle);
         return super.onCreateOptionsMenu(menu);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.pinterest_style_menu:
+
+                return true;
+
+            case R.id.list_style_menu:
+
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
 }
