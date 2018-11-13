@@ -4,14 +4,12 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
-import android.media.Image;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,18 +18,16 @@ import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 
-import butterknife.BindView;
-
 public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<StaggeredRecyclerViewAdapter.ViewHolder>{
-    private ArrayList<Feed> feedItems;
-    private Context context;
+    ArrayList<Feed> feedItems;
+    Context context;
 
     public StaggeredRecyclerViewAdapter(ArrayList<Feed> feedItems, Context context) {
         this.feedItems = feedItems;
         this.context = context;
     }
 
-    public  class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         TextView titleTextView, categoryTextView;
 
@@ -46,7 +42,7 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.feed_item_layout, viewGroup, false);
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.staggered_item_layout, viewGroup, false);
         return new ViewHolder(view);
     }
 

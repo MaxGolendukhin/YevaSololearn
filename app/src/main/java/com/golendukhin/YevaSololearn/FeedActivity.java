@@ -41,6 +41,12 @@ public class FeedActivity extends AppCompatActivity {
 
     private boolean isPinterestStyle = false;
 
+    RecyclerView recyclerView;
+
+    private Menu menu;
+
+    StaggeredGridLayoutManager staggeredGridLayoutManager;;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,10 +56,10 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     private void initStaggeredRecyclerVIewAdapter() {
-        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        recyclerView = findViewById(R.id.recycler_view);
         runTicker();
         staggeredRecyclerViewAdapter = new StaggeredRecyclerViewAdapter(feedItems, this);
-        StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayoutManager.VERTICAL);
+        staggeredGridLayoutManager = new StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
         recyclerView.setAdapter(staggeredRecyclerViewAdapter);
         staggeredRecyclerViewAdapter.notifyDataSetChanged();
@@ -151,23 +157,46 @@ public class FeedActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.feed_activity_menu, menu);
+        updateOptionsMenu();
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    private void updateOptionsMenu() {
         MenuItem pinterestStyleMenu = menu.findItem(R.id.pinterest_style_menu);
         MenuItem listStyleMenu = menu.findItem(R.id.list_style_menu);
         pinterestStyleMenu.setVisible(isPinterestStyle);
         listStyleMenu.setVisible(!isPinterestStyle);
-        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        int [] firstVisiblePositions = null;
+        firstVisiblePositions = staggeredGridLayoutManager.findFirstVisibleItemPositions(firstVisiblePositions);
+        int firstVisiblePosition = firstVisiblePositions[0];
         switch (item.getItemId()) {
             case R.id.pinterest_style_menu:
+                staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL);
+                recyclerView.setLayoutManager(staggeredGridLayoutManager);
+                recyclerView.setAdapter(staggeredRecyclerViewAdapter);
+                isPinterestStyle = !isPinterestStyle;
+                updateOptionsMenu();
+                staggeredGridLayoutManager.scrollToPosition(firstVisiblePosition);
 
                 return true;
 
             case R.id.list_style_menu:
+                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+                recyclerView.setLayoutManager(linearLayoutManager);
+                //staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, LinearLayoutManager.VERTICAL);
+                //recyclerView.setLayoutManager(staggeredGridLayoutManager);
+                RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(feedItems, this);
+                recyclerView.setAdapter(recyclerViewAdapter);
+                isPinterestStyle = !isPinterestStyle;
+                updateOptionsMenu();
+                staggeredGridLayoutManager.scrollToPosition(firstVisiblePosition);
 
                 return true;
         }
