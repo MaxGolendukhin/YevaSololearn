@@ -51,7 +51,7 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
         String title = feedItems.get(i).getTitle();
         String category = feedItems.get(i).getCategory();
         String imageURL = feedItems.get(i).getImageUrl();
-        String id = feedItems.get(i).getId();
+        String id = feedItems.get(i).getFeedId();
         final Feed feed = new Feed(title, category, imageURL, id);
 
         final TextView titleTextView = viewHolder.titleTextView;

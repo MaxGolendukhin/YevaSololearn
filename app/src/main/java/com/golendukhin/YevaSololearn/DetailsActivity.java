@@ -65,11 +65,13 @@ public class DetailsActivity extends AppCompatActivity {
             case R.id.pinned_menu:
                 feed.setPinnned(false);
                 supportInvalidateOptionsMenu();
+
                 return true;
 
             case R.id.unpinned_menu:
                 feed.setPinnned(true);
                 supportInvalidateOptionsMenu();
+
                 return true;
         }
         return super.onOptionsItemSelected(item);

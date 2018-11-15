@@ -3,18 +3,21 @@ package com.golendukhin.YevaSololearn;
 import java.io.Serializable;
 
 class Feed implements Serializable {
-    private String title, category, imageUrl, id;
+    private String title, category, imageUrl, feedId, webUrl;
     private boolean isPinnned;
 
-    Feed(String title, String category, String imageUrl, String id){
+    public Feed(String feedId, String title, String category, String imageUrl,  String webUrl){
+        this.feedId = feedId;
         this.title = title;
         this.category = category;
         this.imageUrl = imageUrl;
-        this.id = id;
+        this.webUrl = webUrl;
         this.isPinnned = false;
     }
 
-    public void setPinnned(boolean pinnned) { isPinnned = pinnned; }
+    void setPinnned(boolean pinnned) { isPinnned = pinnned; }
+
+    String getFeedId() { return feedId; }
 
     String getTitle() {
         return title;
@@ -28,8 +31,9 @@ class Feed implements Serializable {
         return imageUrl;
     }
 
-    String getId() { return id; }
-
-    public boolean isPinnned() { return isPinnned;
+    String getWebUrl() {
+        return webUrl;
     }
+
+    boolean isPinnned() { return isPinnned; }
 }

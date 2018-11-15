@@ -1,5 +1,6 @@
 package com.golendukhin.YevaSololearn;
 
+import android.database.Cursor;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,17 +47,26 @@ public class FeedActivity extends AppCompatActivity {
 
     private Menu menu;
 
-    StaggeredGridLayoutManager staggeredGridLayoutManager;;
+    StaggeredGridLayoutManager staggeredGridLayoutManager;
+
+    DataBaseHelper dataBaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed_layout);
+        dataBaseHelper = new DataBaseHelper(this);
+
+
+
+
         invalidateMenu();
-        initStaggeredRecyclerVIewAdapter();
+        initStaggeredRecyclerView();
+        initPinnedStaggeredRecyclerView();
+
     }
 
-    private void initStaggeredRecyclerVIewAdapter() {
+    private void initStaggeredRecyclerView() {
         recyclerView = findViewById(R.id.recycler_view);
         runTicker();
         staggeredRecyclerViewAdapter = new StaggeredRecyclerViewAdapter(feedItems, this);
@@ -64,6 +75,20 @@ public class FeedActivity extends AppCompatActivity {
         recyclerView.setAdapter(staggeredRecyclerViewAdapter);
         staggeredRecyclerViewAdapter.notifyDataSetChanged();
     }
+
+    private void initPinnedStaggeredRecyclerView() {
+
+        RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
+        pinnedRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        Cursor cursor = dataBaseHelper.fetchAllData();
+
+        //RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(pinnedItems, this);
+        //pinnedRecyclerView.setAdapter(recyclerViewAdapter);
+    }
+
+
+
+
 
     private void runTicker() {
         final Handler handler = new Handler();
@@ -101,10 +126,10 @@ public class FeedActivity extends AppCompatActivity {
 
                             JSONObject fields = item.getJSONObject("fields");
                             String imageUrl = fields.getString("thumbnail");
+                            String feedId = item.getString("id");
+                            String webUrl = item.getString("webUrl");
 
-                            String id = item.getString("id");
-
-                            Feed newFeed = new Feed(title, category, imageUrl, id);
+                            Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl);
                             if (!isInFeedList(newFeed)) {
                                 feedItems.add(newFeed);
                             }
@@ -131,7 +156,7 @@ public class FeedActivity extends AppCompatActivity {
 
     private boolean isInFeedList(Feed newFeed) {
         for (Feed feed : feedItems) {
-            if (feed.getId().equals(newFeed.getId())) return true;
+            if (feed.getFeedId().equals(newFeed.getFeedId())) return true;
         }
         return false;
     }
@@ -146,7 +171,7 @@ public class FeedActivity extends AppCompatActivity {
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         feedItems = (ArrayList<Feed>) savedInstanceState.getSerializable("feedItems");
-        initStaggeredRecyclerVIewAdapter();
+        initStaggeredRecyclerView();
     }
 
     private void invalidateMenu() {
@@ -190,8 +215,6 @@ public class FeedActivity extends AppCompatActivity {
             case R.id.list_style_menu:
                 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
                 recyclerView.setLayoutManager(linearLayoutManager);
-                //staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, LinearLayoutManager.VERTICAL);
-                //recyclerView.setLayoutManager(staggeredGridLayoutManager);
                 RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(feedItems, this);
                 recyclerView.setAdapter(recyclerViewAdapter);
                 isPinterestStyle = !isPinterestStyle;
@@ -203,5 +226,9 @@ public class FeedActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
+    @Override
+    protected void onDestroy() {
+        dataBaseHelper.close();
+        super.onDestroy();
+    }
 }
