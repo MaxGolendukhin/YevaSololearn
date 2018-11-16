@@ -11,12 +11,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.golendukhin.YevaSololearn.dataBase.DataBaseHelper;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class DetailsActivity extends AppCompatActivity {
     private Feed feed;
+    private DataBaseHelper dataBaseHelper;
+
     @BindView(R.id.category_details_text_view) TextView categoryTextView;
     @BindView(R.id.title_details_text_view) TextView titleTextVIew;
     @BindView(R.id.details_view_image_view) ImageView imageView;
@@ -28,6 +31,8 @@ public class DetailsActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         feed = (Feed)getIntent().getSerializableExtra("feed");
         invalidateMenu();
+
+        dataBaseHelper = new DataBaseHelper(this);
 
         categoryTextView.setText(feed.getCategory());
         titleTextVIew.setText(feed.getTitle());
@@ -64,16 +69,24 @@ public class DetailsActivity extends AppCompatActivity {
 
             case R.id.pinned_menu:
                 feed.setPinnned(false);
+                dataBaseHelper.addItem(feed);
+                dataBaseHelper.close();
                 supportInvalidateOptionsMenu();
-
                 return true;
 
             case R.id.unpinned_menu:
                 feed.setPinnned(true);
+                dataBaseHelper.removeItem(feed);
+                dataBaseHelper.close();
                 supportInvalidateOptionsMenu();
-
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStop() {
+        dataBaseHelper.close();
+        super.onStop();
     }
 }

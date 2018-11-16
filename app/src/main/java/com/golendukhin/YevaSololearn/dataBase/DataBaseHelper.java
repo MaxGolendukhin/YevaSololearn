@@ -1,4 +1,4 @@
-package com.golendukhin.YevaSololearn;
+package com.golendukhin.YevaSololearn.dataBase;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -6,17 +6,17 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.golendukhin.YevaSololearn.Feed;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_CATEGORY;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_FEED_ID;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_IMAGE_URL;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_TITLE;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_WEB_URL;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.DATABASE_NAME;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.DATABASE_VERSION;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.TABLE_NAME;
+
 public class DataBaseHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
-    private static final String DATABASE_NAME = "feed.db";
-    public static final String TABLE_NAME = "feeds";
-
-    public static final String COLUMN_FEED_ID = "feedId";
-    public static final String COLUMN_TITLE = "title";
-    public static final String COLUMN_CATEGORY = "category";
-    public static final String COLUMN_IMAGE_URL = "imageUrl";
-    public static final String COLUMN_WEB_URL = "webUrl";
-
     private static final String SQL_DELETE_ENTRIES = "DROP TABLE " + TABLE_NAME + ";";
 
     public DataBaseHelper(Context context) {
@@ -40,7 +40,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         onCreate(sqLiteDatabase);
     }
 
-    boolean addItem(Feed feed) {
+    public boolean addItem(Feed feed) {
         SQLiteDatabase sqLiteDatabase = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_FEED_ID, feed.getFeedId());
@@ -52,13 +52,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return sqLiteDatabase.insert(TABLE_NAME, null, contentValues) != -1;
     }
 
-    Cursor fetchAllData() {
+    public Cursor fetchAllData() {
         SQLiteDatabase sqLiteDatabase = getReadableDatabase();
-        return sqLiteDatabase.query(TABLE_NAME, null, null, null, null, null, null
-        );
+        return sqLiteDatabase.query(TABLE_NAME, null, null, null, null, null, null);
     }
 
-    boolean deleteItem(Feed feed) {
+    public boolean removeItem(Feed feed) {
         SQLiteDatabase sqLiteDatabase = getWritableDatabase();
 
         String selection = COLUMN_FEED_ID + " = ?";

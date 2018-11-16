@@ -2,7 +2,7 @@ package com.golendukhin.YevaSololearn;
 
 import java.io.Serializable;
 
-class Feed implements Serializable {
+public class Feed implements Serializable {
     private String title, category, imageUrl, feedId, webUrl;
     private boolean isPinnned;
 
@@ -15,25 +15,25 @@ class Feed implements Serializable {
         this.isPinnned = false;
     }
 
-    void setPinnned(boolean pinnned) { isPinnned = pinnned; }
+    public void setPinnned(boolean pinnned) { isPinnned = pinnned; }
 
-    String getFeedId() { return feedId; }
+    public String getFeedId() { return feedId; }
 
-    String getTitle() {
+    public String getTitle() {
         return title;
     }
 
-    String getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    String getImageUrl() {
+    public String getImageUrl() {
         return imageUrl;
     }
 
-    String getWebUrl() {
+    public String getWebUrl() {
         return webUrl;
     }
 
-    boolean isPinnned() { return isPinnned; }
+    public boolean isPinnned() { return isPinnned; }
 }

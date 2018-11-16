@@ -1,10 +1,11 @@
 package com.golendukhin.YevaSololearn;
 
 import android.database.Cursor;
+import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.LoaderManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -20,7 +21,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-
+import com.golendukhin.YevaSololearn.adapters.PinnedItemsCursorAdapter;
+import com.golendukhin.YevaSololearn.adapters.RecyclerViewAdapter;
+import com.golendukhin.YevaSololearn.adapters.StaggeredRecyclerViewAdapter;
+import com.golendukhin.YevaSololearn.dataBase.DataBaseHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class FeedActivity extends AppCompatActivity {
+public class FeedActivity extends AppCompatActivity /*implements LoaderManager.LoaderCallbacks<Cursor>*/ {
     private static final int NUM_COLUMNS = 3;
     private static final int INTERVAL = 30000;
 
@@ -57,9 +61,6 @@ public class FeedActivity extends AppCompatActivity {
         setContentView(R.layout.activity_feed_layout);
         dataBaseHelper = new DataBaseHelper(this);
 
-
-
-
         invalidateMenu();
         initStaggeredRecyclerView();
         initPinnedStaggeredRecyclerView();
@@ -77,18 +78,15 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     private void initPinnedStaggeredRecyclerView() {
-
-        RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
-        pinnedRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         Cursor cursor = dataBaseHelper.fetchAllData();
-
-        //RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(pinnedItems, this);
-        //pinnedRecyclerView.setAdapter(recyclerViewAdapter);
+        if (cursor.getCount() > 0) {
+            RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+            pinnedRecyclerView.setLayoutManager(linearLayoutManager);
+            PinnedItemsCursorAdapter pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
+            pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
+        }
     }
-
-
-
-
 
     private void runTicker() {
         final Handler handler = new Handler();
@@ -226,9 +224,21 @@ public class FeedActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onDestroy() {
-        dataBaseHelper.close();
-        super.onDestroy();
-    }
+//    @Override
+//    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+//        commitsAdapter.swapCursor(data);
+//    }
+//
+//    @Override
+//    public void onLoaderReset(Loader<Cursor> loader) {
+//        commitsAdapter.swapCursor(null);
+//    }
+//
+//    @Override
+//    protected void onStop() {
+//        dataBaseHelper.close();
+//        super.onStop();
+//    }
+
+
 }

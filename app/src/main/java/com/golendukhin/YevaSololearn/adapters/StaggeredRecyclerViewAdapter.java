@@ -1,4 +1,4 @@
-package com.golendukhin.YevaSololearn;
+package com.golendukhin.YevaSololearn.adapters;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
@@ -15,12 +15,15 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.golendukhin.YevaSololearn.DetailsActivity;
+import com.golendukhin.YevaSololearn.Feed;
+import com.golendukhin.YevaSololearn.R;
 
 import java.util.ArrayList;
 
 public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<StaggeredRecyclerViewAdapter.ViewHolder>{
-    ArrayList<Feed> feedItems;
-    Context context;
+    private ArrayList<Feed> feedItems;
+    private Context context;
 
     public StaggeredRecyclerViewAdapter(ArrayList<Feed> feedItems, Context context) {
         this.feedItems = feedItems;
@@ -51,8 +54,9 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
         String title = feedItems.get(i).getTitle();
         String category = feedItems.get(i).getCategory();
         String imageURL = feedItems.get(i).getImageUrl();
-        String id = feedItems.get(i).getFeedId();
-        final Feed feed = new Feed(title, category, imageURL, id);
+        String feedId = feedItems.get(i).getFeedId();
+        String webUrl = feedItems.get(i).getWebUrl();
+        final Feed feed = new Feed(title, category, imageURL, feedId, webUrl);
 
         final TextView titleTextView = viewHolder.titleTextView;
         final TextView categoryTextView = viewHolder.categoryTextView;
@@ -82,7 +86,6 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
                 context.startActivity(intent, activityOptions.toBundle());
             }
         });
-
     }
 
     @Override
