@@ -6,13 +6,13 @@ public class Feed implements Serializable {
     private String title, category, imageUrl, feedId, webUrl;
     private boolean isPinnned;
 
-    public Feed(String feedId, String title, String category, String imageUrl,  String webUrl){
+    public Feed(String feedId, String title, String category, String imageUrl,  String webUrl, boolean isPinnned){
         this.feedId = feedId;
         this.title = title;
         this.category = category;
         this.imageUrl = imageUrl;
         this.webUrl = webUrl;
-        this.isPinnned = false;
+        this.isPinnned = isPinnned;
     }
 
     public void setPinnned(boolean pinnned) { isPinnned = pinnned; }

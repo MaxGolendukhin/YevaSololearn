@@ -1,5 +1,6 @@
 package com.golendukhin.YevaSololearn;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -34,12 +36,17 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
+import static com.golendukhin.YevaSololearn.adapters.PinnedItemsCursorAdapter.PINNED_ITEMS_CURSOR_ADAPTER;
+import static com.golendukhin.YevaSololearn.adapters.StaggeredRecyclerViewAdapter.STAGGERED_RECYCLE_VIEW_ADAPTER;
+
 public class FeedActivity extends AppCompatActivity /*implements LoaderManager.LoaderCallbacks<Cursor>*/ {
     private static final int NUM_COLUMNS = 3;
     private static final int INTERVAL = 30000;
 
     private ArrayList<Feed> feedItems = new ArrayList<>();
-    private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter;
+    private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter = null;
+    private PinnedItemsCursorAdapter pinnedItemsCursorAdapter = null;
     private ProgressBar progressBar;
 
     private static final String GUARDIAN_REQUEST_URL =
@@ -54,6 +61,7 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     StaggeredGridLayoutManager staggeredGridLayoutManager;
 
     DataBaseHelper dataBaseHelper;
+    Cursor cursor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +72,6 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
         invalidateMenu();
         initStaggeredRecyclerView();
         initPinnedStaggeredRecyclerView();
-
     }
 
     private void initStaggeredRecyclerView() {
@@ -78,12 +85,12 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     }
 
     private void initPinnedStaggeredRecyclerView() {
-        Cursor cursor = dataBaseHelper.fetchAllData();
+        cursor = dataBaseHelper.fetchAllData();
         if (cursor.getCount() > 0) {
             RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
             pinnedRecyclerView.setLayoutManager(linearLayoutManager);
-            PinnedItemsCursorAdapter pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
+            pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
             pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
         }
     }
@@ -127,7 +134,7 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
                             String feedId = item.getString("id");
                             String webUrl = item.getString("webUrl");
 
-                            Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl);
+                            Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl, false);
                             if (!isInFeedList(newFeed)) {
                                 feedItems.add(newFeed);
                             }
@@ -224,21 +231,36 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
         return super.onOptionsItemSelected(item);
     }
 
-//    @Override
-//    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-//        commitsAdapter.swapCursor(data);
-//    }
-//
-//    @Override
-//    public void onLoaderReset(Loader<Cursor> loader) {
-//        commitsAdapter.swapCursor(null);
-//    }
-//
-//    @Override
-//    protected void onStop() {
-//        dataBaseHelper.close();
-//        super.onStop();
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        cursor = dataBaseHelper.fetchAllData();
+//        if (cursor.getCount() > 0) {
+//            RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
+//            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+//            pinnedRecyclerView.setLayoutManager(linearLayoutManager);
+//            pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
+//            pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
+//        }
 
+        if (requestCode == PINNED_ITEMS_CURSOR_ADAPTER) {
+            initPinnedStaggeredRecyclerView();
+        } else if (requestCode == STAGGERED_RECYCLE_VIEW_ADAPTER) {
+            Feed feed = (Feed)data.getSerializableExtra("feed");
+            if (!feed.isPinnned()) {
+                String feedId = feed.getFeedId();
+                int index = 0;
+                for (int i = 0; i < feedItems.size(); i++) {
+                    if (feedItems.get(i).getFeedId().equals(feedId)) {
+                        index = i;
+                        break;
+                    }
+                }
+                feedItems.remove(index);
+                staggeredRecyclerViewAdapter.updateAdapter(feedItems);
+            }
+            //staggeredRecyclerViewAdapter.notifyDataSetChanged();
 
+            initPinnedStaggeredRecyclerView();
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.golendukhin.YevaSololearn;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import android.support.v7.app.ActionBar;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.golendukhin.YevaSololearn.dataBase.DataBaseHelper;
 
 import butterknife.BindView;
@@ -69,15 +71,13 @@ public class DetailsActivity extends AppCompatActivity {
 
             case R.id.pinned_menu:
                 feed.setPinnned(false);
-                dataBaseHelper.addItem(feed);
-                dataBaseHelper.close();
+                dataBaseHelper.removeItem(feed);
                 supportInvalidateOptionsMenu();
                 return true;
 
             case R.id.unpinned_menu:
                 feed.setPinnned(true);
-                dataBaseHelper.removeItem(feed);
-                dataBaseHelper.close();
+                dataBaseHelper.addItem(feed);
                 supportInvalidateOptionsMenu();
                 return true;
         }
@@ -88,5 +88,14 @@ public class DetailsActivity extends AppCompatActivity {
     protected void onStop() {
         dataBaseHelper.close();
         super.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent returnIntent = getIntent();
+        returnIntent.putExtra("feed", feed);
+        setResult(RESULT_OK, returnIntent);
+        super.onBackPressed();
+
     }
 }

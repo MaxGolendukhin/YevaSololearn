@@ -21,7 +21,10 @@ import com.golendukhin.YevaSololearn.R;
 
 import java.util.ArrayList;
 
-public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<StaggeredRecyclerViewAdapter.ViewHolder>{
+public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<StaggeredRecyclerViewAdapter.ViewHolder> {
+    public final static int STAGGERED_RECYCLE_VIEW_ADAPTER = 0;
+//    public final static int RECYCLE_VIEW_ADAPTER = 1;
+
     private ArrayList<Feed> feedItems;
     private Context context;
 
@@ -56,7 +59,7 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
         String imageURL = feedItems.get(i).getImageUrl();
         String feedId = feedItems.get(i).getFeedId();
         String webUrl = feedItems.get(i).getWebUrl();
-        final Feed feed = new Feed(title, category, imageURL, feedId, webUrl);
+        final Feed feed = new Feed(feedId, title, category, imageURL,  webUrl, false);
 
         final TextView titleTextView = viewHolder.titleTextView;
         final TextView categoryTextView = viewHolder.categoryTextView;
@@ -83,7 +86,7 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
                 pairs[2] = new Pair<View, String>(imageView, "image_transition");
 
                 ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation((Activity)context, pairs);
-                context.startActivity(intent, activityOptions.toBundle());
+                ((Activity) context).startActivityForResult(intent, STAGGERED_RECYCLE_VIEW_ADAPTER, activityOptions.toBundle());
             }
         });
     }
@@ -91,5 +94,10 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
     @Override
     public int getItemCount() {
         return feedItems.size();
+    }
+
+    public void updateAdapter(ArrayList<Feed> newFeedItems) {
+        feedItems = newFeedItems;
+        this.notifyDataSetChanged();
     }
 }

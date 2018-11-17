@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,9 @@ import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_WEB_URL;
 
 public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedItemsCursorAdapter.ViewHolder> {
+    private final static int COLUMNS_NUM = 3;
+    public final static int PINNED_ITEMS_CURSOR_ADAPTER = 1;
+
     Context context;
 
     public PinnedItemsCursorAdapter(Context context, Cursor cursor) {
@@ -36,8 +40,8 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
 
     @Override
     public PinnedItemsCursorAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.staggered_item_layout, viewGroup, false);
-        return new ViewHolder(v);
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.pinned_item_layout, viewGroup, false);
+        return new ViewHolder(view);
     }
 
     @Override
@@ -47,7 +51,7 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
         String imageURL = cursor.getString(cursor.getColumnIndex(COLUMN_IMAGE_URL));
         String feedId = cursor.getString(cursor.getColumnIndex(COLUMN_FEED_ID));
         String webUrl = cursor.getString(cursor.getColumnIndex(COLUMN_WEB_URL));
-        final Feed feed = new Feed(title, category, imageURL, feedId, webUrl);
+        final Feed feed = new Feed(feedId, title, category, imageURL, webUrl, true);
 
         final TextView titleTextView = viewHolder.titleTextView;
         final TextView categoryTextView = viewHolder.categoryTextView;
@@ -74,7 +78,7 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
                 pairs[2] = new Pair<View, String>(imageView, "image_transition");
 
                 ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation((Activity)context, pairs);
-                context.startActivity(intent, activityOptions.toBundle());
+                ((Activity) context).startActivityForResult(intent, PINNED_ITEMS_CURSOR_ADAPTER, activityOptions.toBundle());
             }
         });
     }
@@ -88,6 +92,11 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
             this.imageView = itemView.findViewById(R.id.feed_image_view);
             this.titleTextView = itemView.findViewById(R.id.title_text_view);
             this.categoryTextView = itemView.findViewById(R.id.category_text_view);
+
+            DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+            float dpWidth = displayMetrics.widthPixels;
+
+            this.imageView.getLayoutParams().width = (int)dpWidth / COLUMNS_NUM;
         }
     }
 }

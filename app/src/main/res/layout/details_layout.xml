@@ -34,7 +34,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
-                android:transitionName="title_transition"/>
+                android:transitionName="title_transition"
+                android:text="TextViewsdsdfffffffffffffff"/>
         </LinearLayout>
     </ScrollView>
 
@@ -42,10 +43,10 @@
         android:id="@+id/category_details_text_view"
         style="@style/OverlayText"
         android:layout_width="0dp"
-        android:layout_height="31dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="TextView"
+        android:text="TextViewsdsdfffffffffffffff"
         android:textSize="18sp"
         android:transitionName="category_transition"
         app:layout_constraintStart_toStartOf="parent"
