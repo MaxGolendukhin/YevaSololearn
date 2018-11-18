@@ -4,13 +4,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.LoaderManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -42,17 +40,17 @@ import static com.golendukhin.YevaSololearn.adapters.StaggeredRecyclerViewAdapte
 
 public class FeedActivity extends AppCompatActivity /*implements LoaderManager.LoaderCallbacks<Cursor>*/ {
     private static final int NUM_COLUMNS = 3;
-    private static final int INTERVAL = 30000;
+    private static final int INTERVAL = 10000;
 
     private ArrayList<Feed> feedItems = new ArrayList<>();
-    private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter = null;
-    private PinnedItemsCursorAdapter pinnedItemsCursorAdapter = null;
+    private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter;
+    private PinnedItemsCursorAdapter pinnedItemsCursorAdapter;
     private ProgressBar progressBar;
 
     private static final String GUARDIAN_REQUEST_URL =
             "https://content.guardianapis.com/search?q&api-key=test&show-fields=thumbnail&from-date=2018-01-01&orderBy=newest&page-size=50";
 
-    private boolean isPinterestStyle = false;
+    private boolean isPinterestStyle = true;
 
     RecyclerView recyclerView;
 
@@ -63,35 +61,52 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     DataBaseHelper dataBaseHelper;
     Cursor cursor;
 
+    private RecyclerView pinnedRecyclerView;
+
+    private LinearLayoutManager linearLayoutManager;
+    private RecyclerViewAdapter recyclerViewAdapter;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed_layout);
         dataBaseHelper = new DataBaseHelper(this);
 
+        pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
+        runTicker();
+
         invalidateMenu();
-        initStaggeredRecyclerView();
-        initPinnedStaggeredRecyclerView();
+        initRecyclerView();
+        initPinnedItemsRecyclerView();
     }
 
-    private void initStaggeredRecyclerView() {
+    private void initRecyclerView() {
         recyclerView = findViewById(R.id.recycler_view);
-        runTicker();
+
         staggeredRecyclerViewAdapter = new StaggeredRecyclerViewAdapter(feedItems, this);
         staggeredGridLayoutManager = new StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayoutManager.VERTICAL);
+
+        recyclerViewAdapter = new RecyclerViewAdapter(feedItems, this);
+        linearLayoutManager = new LinearLayoutManager(this);
+
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
         recyclerView.setAdapter(staggeredRecyclerViewAdapter);
-        staggeredRecyclerViewAdapter.notifyDataSetChanged();
     }
 
-    private void initPinnedStaggeredRecyclerView() {
+    private void initPinnedItemsRecyclerView() {
         cursor = dataBaseHelper.fetchAllData();
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        pinnedRecyclerView.setLayoutManager(linearLayoutManager);
+        pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
+        pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
+
         if (cursor.getCount() > 0) {
-            RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-            pinnedRecyclerView.setLayoutManager(linearLayoutManager);
-            pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
-            pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
+
+            pinnedRecyclerView.setVisibility(View.VISIBLE);
+        } else {
+            pinnedRecyclerView.setVisibility(View.GONE);
         }
     }
 
@@ -176,7 +191,7 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         feedItems = (ArrayList<Feed>) savedInstanceState.getSerializable("feedItems");
-        initStaggeredRecyclerView();
+        initRecyclerView();
     }
 
     private void invalidateMenu() {
@@ -197,20 +212,26 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     private void updateOptionsMenu() {
         MenuItem pinterestStyleMenu = menu.findItem(R.id.pinterest_style_menu);
         MenuItem listStyleMenu = menu.findItem(R.id.list_style_menu);
-        pinterestStyleMenu.setVisible(isPinterestStyle);
-        listStyleMenu.setVisible(!isPinterestStyle);
+        pinterestStyleMenu.setVisible(!isPinterestStyle);
+        listStyleMenu.setVisible(isPinterestStyle);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int [] firstVisiblePositions = null;
-        firstVisiblePositions = staggeredGridLayoutManager.findFirstVisibleItemPositions(firstVisiblePositions);
-        int firstVisiblePosition = firstVisiblePositions[0];
+        int firstVisiblePosition;
+        if (isPinterestStyle) {
+            firstVisiblePositions = staggeredGridLayoutManager.findFirstVisibleItemPositions(firstVisiblePositions);
+            firstVisiblePosition = firstVisiblePositions[0];
+        } else {
+            firstVisiblePosition = linearLayoutManager.findFirstVisibleItemPosition();
+        }
+
         switch (item.getItemId()) {
             case R.id.pinterest_style_menu:
-                staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL);
                 recyclerView.setLayoutManager(staggeredGridLayoutManager);
                 recyclerView.setAdapter(staggeredRecyclerViewAdapter);
+
                 isPinterestStyle = !isPinterestStyle;
                 updateOptionsMenu();
                 staggeredGridLayoutManager.scrollToPosition(firstVisiblePosition);
@@ -218,13 +239,12 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
                 return true;
 
             case R.id.list_style_menu:
-                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
                 recyclerView.setLayoutManager(linearLayoutManager);
-                RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(feedItems, this);
                 recyclerView.setAdapter(recyclerViewAdapter);
+
                 isPinterestStyle = !isPinterestStyle;
                 updateOptionsMenu();
-                staggeredGridLayoutManager.scrollToPosition(firstVisiblePosition);
+                linearLayoutManager.scrollToPosition(firstVisiblePosition);
 
                 return true;
         }
@@ -233,34 +253,39 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        cursor = dataBaseHelper.fetchAllData();
-//        if (cursor.getCount() > 0) {
-//            RecyclerView pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
-//            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-//            pinnedRecyclerView.setLayoutManager(linearLayoutManager);
-//            pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
-//            pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
-//        }
+        Feed feed = (Feed)data.getSerializableExtra("feed");
+        boolean isPinned = feed.isPinnned();
 
-        if (requestCode == PINNED_ITEMS_CURSOR_ADAPTER) {
-            initPinnedStaggeredRecyclerView();
-        } else if (requestCode == STAGGERED_RECYCLE_VIEW_ADAPTER) {
-            Feed feed = (Feed)data.getSerializableExtra("feed");
-            if (!feed.isPinnned()) {
-                String feedId = feed.getFeedId();
-                int index = 0;
-                for (int i = 0; i < feedItems.size(); i++) {
-                    if (feedItems.get(i).getFeedId().equals(feedId)) {
-                        index = i;
-                        break;
-                    }
+        if (requestCode == PINNED_ITEMS_CURSOR_ADAPTER && !isPinned) {
+            updatePinnedItemsCursorAdapter();
+        } else if (requestCode == STAGGERED_RECYCLE_VIEW_ADAPTER && isPinned) {
+            String feedId = feed.getFeedId();
+            int index = 0;
+            for (int i = 0; i < feedItems.size(); i++) {
+                if (feedItems.get(i).getFeedId().equals(feedId)) {
+                    index = i;
+                    break;
                 }
-                feedItems.remove(index);
-                staggeredRecyclerViewAdapter.updateAdapter(feedItems);
             }
-            //staggeredRecyclerViewAdapter.notifyDataSetChanged();
+            feedItems.remove(index);
 
-            initPinnedStaggeredRecyclerView();
+            if (isPinterestStyle)
+                staggeredRecyclerViewAdapter.notifyDataSetChanged();
+            else
+                recyclerViewAdapter.notifyDataSetChanged();
+
+            updatePinnedItemsCursorAdapter();
+            pinnedRecyclerView.scrollToPosition(cursor.getCount() - 1);
+        }
+    }
+
+    private void updatePinnedItemsCursorAdapter() {
+        cursor = dataBaseHelper.fetchAllData();
+        pinnedItemsCursorAdapter.swapCursor(cursor);
+        if (cursor.getCount() > 0) {
+            pinnedRecyclerView.setVisibility(View.VISIBLE);
+        } else {
+            pinnedRecyclerView.setVisibility(View.GONE);
         }
     }
 }

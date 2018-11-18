@@ -15,6 +15,7 @@ import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.DATABASE_NAME;
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.DATABASE_VERSION;
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.TABLE_NAME;
+import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry._ID;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_ENTRIES = "DROP TABLE " + TABLE_NAME + ";";
@@ -26,11 +27,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         String SQL_CREATE_ENTRIES = "CREATE TABLE " + TABLE_NAME + "(" +
+                _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_FEED_ID + " TEXT NOT NULL, " +
                 COLUMN_TITLE + " TEXT NOT NULL, " +
                 COLUMN_CATEGORY + " TEXT NOT NULL, " +
                 COLUMN_IMAGE_URL + " TEXT NOT NULL, " +
-                COLUMN_WEB_URL + " TEXT NOT NULL);";
+                COLUMN_WEB_URL + " TEXT NOT NULL," +
+                "UNIQUE(" + COLUMN_FEED_ID + "));";
         sqLiteDatabase.execSQL(SQL_CREATE_ENTRIES);
     }
 
@@ -38,6 +41,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         sqLiteDatabase.execSQL(SQL_DELETE_ENTRIES);
         onCreate(sqLiteDatabase);
+    }
+
+    public Cursor fetchAllData() {
+        SQLiteDatabase sqLiteDatabase = getReadableDatabase();
+        return sqLiteDatabase.query(TABLE_NAME, null, null, null, null, null, null);
     }
 
     public boolean addItem(Feed feed) {
@@ -50,11 +58,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         contentValues.put(COLUMN_WEB_URL, feed.getWebUrl());
 
         return sqLiteDatabase.insert(TABLE_NAME, null, contentValues) != -1;
-    }
-
-    public Cursor fetchAllData() {
-        SQLiteDatabase sqLiteDatabase = getReadableDatabase();
-        return sqLiteDatabase.query(TABLE_NAME, null, null, null, null, null, null);
     }
 
     public boolean removeItem(Feed feed) {
