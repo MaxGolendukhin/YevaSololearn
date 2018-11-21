@@ -140,18 +140,23 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
                         root = response.getJSONObject("response");
                         JSONArray result = root.getJSONArray("results");
                         for (int i = 0; i < result.length(); i++) {
-                            JSONObject item = result.getJSONObject(i);
-                            String title = item.getString("webTitle");
-                            String category = item.getString("sectionName");
+                            try {
+                                JSONObject item = result.getJSONObject(i);
+                                String title = item.getString("webTitle");
+                                String category = item.getString("sectionName");
 
-                            JSONObject fields = item.getJSONObject("fields");
-                            String imageUrl = fields.getString("thumbnail");
-                            String feedId = item.getString("id");
-                            String webUrl = item.getString("webUrl");
+                                JSONObject fields = item.getJSONObject("fields");
+                                String imageUrl = fields.getString("thumbnail");
+                                String feedId = item.getString("id");
+                                String webUrl = item.getString("webUrl");
 
-                            Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl, false);
-                            if (!isInFeedList(newFeed)) {
-                                feedItems.add(newFeed);
+                                Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl, false);
+                                if (!isInFeedList(newFeed)) {
+                                    feedItems.add(newFeed);
+                                }
+                            } catch (JSONException e){
+                                e.printStackTrace();
+                                continue; //if some of fields are absent not to stop parsing request
                             }
                         }
                     } catch (JSONException e){
