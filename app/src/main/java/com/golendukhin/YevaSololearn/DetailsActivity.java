@@ -20,6 +20,7 @@ import butterknife.ButterKnife;
 public class DetailsActivity extends AppCompatActivity {
     private Feed feed;
     private DataBaseHelper dataBaseHelper;
+    private boolean initiallyIsPinned;
 
     @BindView(R.id.category_details_text_view) TextView categoryTextView;
     @BindView(R.id.title_details_text_view) TextView titleTextVIew;
@@ -31,6 +32,7 @@ public class DetailsActivity extends AppCompatActivity {
         setContentView(R.layout.details_layout);
         ButterKnife.bind(this);
         feed = (Feed)getIntent().getSerializableExtra("feed");
+        initiallyIsPinned = feed.isPinnned();
         invalidateMenu();
 
         dataBaseHelper = new DataBaseHelper(this);
@@ -93,7 +95,20 @@ public class DetailsActivity extends AppCompatActivity {
     public void onBackPressed() {
         Intent returnIntent = getIntent();
         returnIntent.putExtra("feed", feed);
+//        boolean a = defineIfLikeSwitched();
+        returnIntent.putExtra("isSwitched", defineIfLikeSwitched());
         setResult(RESULT_OK, returnIntent);
         super.onBackPressed();
     }
+
+    private boolean defineIfLikeSwitched() {
+        boolean isPinned = feed.isPinnned();
+        boolean isSwitched = true;
+
+        if ((isPinned && initiallyIsPinned) || (!isPinned && !initiallyIsPinned)) {
+            isSwitched = false;
+        }
+        return isSwitched;
+    }
+
 }
