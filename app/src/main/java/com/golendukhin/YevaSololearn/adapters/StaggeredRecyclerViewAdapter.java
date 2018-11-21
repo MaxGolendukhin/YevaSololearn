@@ -96,8 +96,8 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
         return feedItems.size();
     }
 
-    public void updateAdapter(ArrayList<Feed> newFeedItems) {
-        feedItems = newFeedItems;
-        this.notifyDataSetChanged();
-    }
+//    public void updateAdapter(ArrayList<Feed> newFeedItems) {
+//        feedItems = newFeedItems;
+//        this.notifyDataSetChanged();
+//    }
 }

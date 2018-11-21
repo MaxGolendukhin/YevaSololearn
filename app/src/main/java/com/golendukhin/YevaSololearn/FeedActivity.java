@@ -62,8 +62,6 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     Cursor cursor;
 
     private RecyclerView pinnedRecyclerView;
-
-    private LinearLayoutManager linearLayoutManager;
     private RecyclerViewAdapter recyclerViewAdapter;
 
 
@@ -72,11 +70,9 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed_layout);
-        dataBaseHelper = new DataBaseHelper(this);
-
-        pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
         runTicker();
 
+        dataBaseHelper = new DataBaseHelper(this);
         invalidateMenu();
         initRecyclerView();
         initPinnedItemsRecyclerView();
@@ -103,7 +99,6 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
         pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
 
         if (cursor.getCount() > 0) {
-
             pinnedRecyclerView.setVisibility(View.VISIBLE);
         } else {
             pinnedRecyclerView.setVisibility(View.GONE);
@@ -184,19 +179,6 @@ public class FeedActivity extends AppCompatActivity /*implements LoaderManager.L
             if (feed.getFeedId().equals(newFeed.getFeedId())) return true;
         }
         return false;
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putSerializable("feedItems", feedItems);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        feedItems = (ArrayList<Feed>) savedInstanceState.getSerializable("feedItems");
-        initRecyclerView();
     }
 
     private void invalidateMenu() {
