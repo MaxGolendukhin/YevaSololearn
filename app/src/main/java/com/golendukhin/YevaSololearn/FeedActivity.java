@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -48,11 +49,12 @@ public class FeedActivity extends AppCompatActivity {
     private PinnedItemsCursorAdapter pinnedItemsCursorAdapter;
     private ProgressBar progressBar;
 
-    private static final String GUARDIAN_REQUEST_API_KEY = "test";
+    private final int pageSize = 50;
+    private int page = 1;
 
+    private static final String GUARDIAN_REQUEST_API_KEY = "test";
     private static final String GUARDIAN_REQUEST_URL =
-//            "https://content.guardianapis.com/search?q&show-fields=thumbnail&from-date=2018-01-01&orderBy=oldest&page-size=50&api-key=".concat(GUARDIAN_REQUEST_API_KEY);
-            "http://content.guardianapis.com/search?show-fields=thumbnail&page-size=50&page=10&orderBy=newest&order-date=last-modified&format=json&api-key=".concat(GUARDIAN_REQUEST_API_KEY);
+            "http://content.guardianapis.com/search?show-fields=thumbnail&orderBy=newest&order-date=last-modified&format=json&api-key=".concat(GUARDIAN_REQUEST_API_KEY);
 
     private boolean isPinterestStyle = true;
 
@@ -70,6 +72,16 @@ public class FeedActivity extends AppCompatActivity {
     private RecyclerView pinnedRecyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
+    private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+            if (!recyclerView.canScrollVertically(1)) {
+                jsonRequest();
+            }
+        }
+    };
+
 
 
     @Override
@@ -80,7 +92,8 @@ public class FeedActivity extends AppCompatActivity {
 
     private void initActivity() {
         setContentView(R.layout.activity_feed_layout);
-        runTicker();
+        jsonRequest();
+        //runTicker();
 
         dataBaseHelper = new DataBaseHelper(this);
         invalidateMenu();
@@ -105,6 +118,7 @@ public class FeedActivity extends AppCompatActivity {
             recyclerView.setAdapter(recyclerViewAdapter );
         }
 
+        recyclerView.addOnScrollListener(onScrollListener);
         recyclerView.setLayoutManager(staggeredGridLayoutManager);
         recyclerView.setAdapter(staggeredRecyclerViewAdapter);
     }
@@ -130,7 +144,7 @@ public class FeedActivity extends AppCompatActivity {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                handler.post(new Runnable() {
+                handler.post( new Runnable() {
                     @Override
                     public void run() {
                         jsonRequest();
@@ -142,10 +156,11 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     private void jsonRequest() {
+        String request = GUARDIAN_REQUEST_URL.concat("&page-size=").concat(String.valueOf(pageSize)).concat("&page=").concat(String.valueOf(page));
         progressBar = findViewById(R.id.progress_bar);
         progressBar.setVisibility(View.VISIBLE);
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(GUARDIAN_REQUEST_URL, null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(request, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 if (response != null) {
@@ -191,6 +206,7 @@ public class FeedActivity extends AppCompatActivity {
             }
         });
         requestQueue.add(jsonObjectRequest);
+        page++;
     }
 
     private boolean isInFeedList(Feed newFeed) {
