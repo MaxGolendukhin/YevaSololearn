@@ -10,6 +10,5 @@
         android:id="@+id/unpinned_menu"
         android:icon="@drawable/not_pinned_button"
         android:title="unpinned"
-        app:showAsAction="always"
-        />
+        app:showAsAction="always" />
 </menu>

@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">YevaSololearn</string>
-
     <string name="notification_title">Guardian</string>
     <string name="notification_message">There are new articles available</string>
-
 </resources>

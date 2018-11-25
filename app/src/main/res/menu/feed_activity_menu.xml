@@ -2,9 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/pinterest_style_menu"
-        android:visible="true"
-        android:title="pinterest style"/>
-    <item android:id="@+id/list_style_menu"
-        android:visible="true"
-        android:title="list style" />
+        android:title="pinterest style"
+        android:visible="true" />
+    <item
+        android:id="@+id/list_style_menu"
+        android:title="list style"
+        android:visible="true" />
 </menu>
