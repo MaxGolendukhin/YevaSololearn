@@ -41,7 +41,7 @@ import static com.golendukhin.YevaSololearn.adapters.PinnedItemsCursorAdapter.PI
 import static com.golendukhin.YevaSololearn.adapters.StaggeredRecyclerViewAdapter.STAGGERED_RECYCLE_VIEW_ADAPTER;
 
 public class FeedActivity extends AppCompatActivity {
-    public static final String GUARDIAN_REQUEST_API_KEY = "3a64c26a-9ce1-402a-8472-7d0a7d749b3c";
+    public static final String GUARDIAN_REQUEST_API_KEY = "test";
     public static final String GUARDIAN_REQUEST_URL =
             "http://content.guardianapis.com/search?show-fields=thumbnail&orderBy=newest&order-date=last-modified&format=json&api-key=".concat(GUARDIAN_REQUEST_API_KEY);
     private static final int NUM_COLUMNS = 3;
