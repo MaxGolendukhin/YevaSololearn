@@ -9,9 +9,11 @@
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:id="@+id/details_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:clickable="true">
 
             <ImageView
                 android:id="@+id/details_view_image_view"

@@ -23,26 +23,12 @@ import java.util.ArrayList;
 
 public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<StaggeredRecyclerViewAdapter.ViewHolder> {
     public final static int STAGGERED_RECYCLE_VIEW_ADAPTER = 0;
-//    public final static int RECYCLE_VIEW_ADAPTER = 1;
-
     private ArrayList<Feed> feedItems;
     private Context context;
 
     public StaggeredRecyclerViewAdapter(ArrayList<Feed> feedItems, Context context) {
         this.feedItems = feedItems;
         this.context = context;
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageView;
-        TextView titleTextView, categoryTextView;
-
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            this.imageView = itemView.findViewById(R.id.feed_image_view);
-            this.titleTextView = itemView.findViewById(R.id.title_text_view);
-            this.categoryTextView = itemView.findViewById(R.id.category_text_view);
-        }
     }
 
     @NonNull
@@ -59,7 +45,7 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
         String imageURL = feedItems.get(i).getImageUrl();
         String feedId = feedItems.get(i).getFeedId();
         String webUrl = feedItems.get(i).getWebUrl();
-        final Feed feed = new Feed(feedId, title, category, imageURL,  webUrl, false);
+        final Feed feed = new Feed(feedId, title, category, imageURL, webUrl, false);
 
         final TextView titleTextView = viewHolder.titleTextView;
         final TextView categoryTextView = viewHolder.categoryTextView;
@@ -85,7 +71,7 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
                 pairs[1] = new Pair<View, String>(categoryTextView, "category_transition");
                 pairs[2] = new Pair<View, String>(imageView, "image_transition");
 
-                ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation((Activity)context, pairs);
+                ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation((Activity) context, pairs);
                 ((Activity) context).startActivityForResult(intent, STAGGERED_RECYCLE_VIEW_ADAPTER, activityOptions.toBundle());
             }
         });
@@ -94,5 +80,17 @@ public class StaggeredRecyclerViewAdapter extends RecyclerView.Adapter<Staggered
     @Override
     public int getItemCount() {
         return feedItems.size();
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView imageView;
+        TextView titleTextView, categoryTextView;
+
+        ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            this.imageView = itemView.findViewById(R.id.feed_image_view);
+            this.titleTextView = itemView.findViewById(R.id.title_text_view);
+            this.categoryTextView = itemView.findViewById(R.id.category_text_view);
+        }
     }
 }

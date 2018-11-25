@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">SololearnTestApp</string>
-    <string name="util_exception_instantiation">Utils class can not be instantiated</string>
+    <string name="app_name">YevaSololearn</string>
+
+    <string name="notification_title">Guardian</string>
+    <string name="notification_message">There are new articles available</string>
+
 </resources>

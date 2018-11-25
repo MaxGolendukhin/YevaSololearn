@@ -28,10 +28,9 @@ import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_WEB_URL;
 
 public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedItemsCursorAdapter.ViewHolder> {
-    private final static int COLUMNS_NUM = 3;
     public final static int PINNED_ITEMS_CURSOR_ADAPTER = 1;
-
-    Context context;
+    private final static int COLUMNS_NUM = 3;
+    private Context context;
 
     public PinnedItemsCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor);
@@ -78,17 +77,17 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
                 pairs[1] = new Pair<View, String>(categoryTextView, "category_transition");
                 pairs[2] = new Pair<View, String>(imageView, "image_transition");
 
-                ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation((Activity)context, pairs);
+                ActivityOptions activityOptions = ActivityOptions.makeSceneTransitionAnimation((Activity) context, pairs);
                 ((Activity) context).startActivityForResult(intent, PINNED_ITEMS_CURSOR_ADAPTER, activityOptions.toBundle());
             }
         });
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         TextView titleTextView, categoryTextView;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
             this.imageView = itemView.findViewById(R.id.feed_image_view);
             this.titleTextView = itemView.findViewById(R.id.title_text_view);
@@ -97,7 +96,7 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
             DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
             float dpWidth = displayMetrics.widthPixels;
 
-            this.imageView.getLayoutParams().width = (int)dpWidth / COLUMNS_NUM;
+            this.imageView.getLayoutParams().width = (int) dpWidth / COLUMNS_NUM;
         }
     }
 }

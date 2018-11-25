@@ -13,6 +13,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+
 import com.golendukhin.YevaSololearn.dataBase.DataBaseHelper;
 
 import org.json.JSONArray;
@@ -33,8 +34,14 @@ import java.util.TimerTask;
 import static com.golendukhin.YevaSololearn.FeedActivity.GUARDIAN_REQUEST_URL;
 
 public class ItemsCheckService extends Service {
-    private static final String GUARDIAN_REQUEST = GUARDIAN_REQUEST_URL.concat("&page-size=").concat(String.valueOf(1)).concat("&page=").concat(String.valueOf(1));
+    private static final int FIRST_ITEM = 1;
+    private static final String GUARDIAN_REQUEST = GUARDIAN_REQUEST_URL.concat("&page-size=").concat(String.valueOf(FIRST_ITEM)).concat("&page=").concat(String.valueOf(1));
     private static final int INTERVAL = 10000;
+    private static final int READ_TIME_OUT = 1000;
+    private static final int CONNECTION_TIME_OUT = 5000;
+    private static final int VALID_RESPONSE_CODE = 200;
+    private static final String CHANNEL_ID = "channel";
+    private static final String REQUEST_METHOD = "GET";
     private final IBinder iBinder = new LocalBinder();
 
     @Nullable
@@ -54,7 +61,7 @@ public class ItemsCheckService extends Service {
     }
 
     private void sendNotification(Context context, NotificationManager notificationManager) {
-        String notificationChannelId = "cnannel";
+        String notificationChannelId = CHANNEL_ID;
         Intent intent = new Intent(context, FeedActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
@@ -63,20 +70,20 @@ public class ItemsCheckService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel notificationChannel = notificationManager.getNotificationChannel(notificationChannelId);
             if (notificationChannel == null) {
-                notificationChannel = new NotificationChannel(notificationChannelId, "someTile", NotificationManager.IMPORTANCE_DEFAULT);
+                notificationChannel = new NotificationChannel(notificationChannelId, "", NotificationManager.IMPORTANCE_DEFAULT);
                 notificationManager.createNotificationChannel(notificationChannel);
             }
             builder = new NotificationCompat.Builder(context, notificationChannelId)
                     .setSmallIcon(R.drawable.new_item)
-                    .setContentTitle("Guardian")
-                    .setContentText("There are new articles available")
+                    .setContentTitle(context.getString(R.string.notification_title))
+                    .setContentText(context.getString(R.string.notification_message))
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent);
         } else {
             builder = new NotificationCompat.Builder(context, notificationChannelId)
                     .setSmallIcon(R.drawable.new_item)
-                    .setContentTitle("Guardian")
-                    .setContentText("There are new articles available")
+                    .setContentTitle(context.getString(R.string.notification_title))
+                    .setContentText(context.getString(R.string.notification_message))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true);
@@ -92,7 +99,7 @@ public class ItemsCheckService extends Service {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                handler.post( new Runnable() {
+                handler.post(new Runnable() {
                     @Override
                     public void run() {
                         String feedId = jsonRequest();
@@ -116,11 +123,12 @@ public class ItemsCheckService extends Service {
 
         try {
             feedId = task.get();
-        } catch (Exception e) { }
+        } catch (Exception ignored) {
+        }
         return feedId;
     }
 
-    public class LocalBinder extends Binder {
+    class LocalBinder extends Binder {
         /**
          * @return ItemsCheckerService so client might start and stop service when app is visible
          */
@@ -134,25 +142,25 @@ public class ItemsCheckService extends Service {
         protected String doInBackground(URL... urls) {
             URL url = null;
             try {
-                url = createUrl(GUARDIAN_REQUEST);
-            } catch (MalformedURLException e){ }
+                url = createUrl();
+            } catch (MalformedURLException e) {
+            }
 
             String jsonResponse = "";
             try {
                 jsonResponse = makeHttpRequest(url);
-            } catch (IOException e) { }
-
+            } catch (IOException e) {
+            }
             return extractFeatureFromJson(jsonResponse);
-
         }
 
         /**
          * Returns new URL object from the given string URL.
          */
-        private URL createUrl(String stringUrl) throws MalformedURLException {
+        private URL createUrl() throws MalformedURLException {
             URL url;
             try {
-                url = new URL(stringUrl);
+                url = new URL(ItemsCheckService.GUARDIAN_REQUEST);
             } catch (MalformedURLException exception) {
                 return null;
             }
@@ -165,29 +173,27 @@ public class ItemsCheckService extends Service {
         private String makeHttpRequest(URL url) throws IOException {
             String jsonResponse = "";
             if (url == null) {
-                return  jsonResponse;
+                return jsonResponse;
             }
 
             HttpURLConnection urlConnection = null;
             InputStream inputStream = null;
             try {
                 urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.setReadTimeout(1000 /* milliseconds */);
-                urlConnection.setConnectTimeout(5000 /* milliseconds */);
+                urlConnection.setRequestMethod(REQUEST_METHOD);
+                urlConnection.setReadTimeout(READ_TIME_OUT /* milliseconds */);
+                urlConnection.setConnectTimeout(CONNECTION_TIME_OUT /* milliseconds */);
                 urlConnection.connect();
-                if (urlConnection.getResponseCode() == 200) {
+                if (urlConnection.getResponseCode() == VALID_RESPONSE_CODE) {
                     inputStream = urlConnection.getInputStream();
                     jsonResponse = readFromStream(inputStream);
                 }
-            } catch (IOException e) {
-                //some problems with internet
+            } catch (IOException ignored) {
             } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
                 }
                 if (inputStream != null) {
-                    // function must handle java.io.IOException here
                     inputStream.close();
                 }
             }
@@ -216,14 +222,11 @@ public class ItemsCheckService extends Service {
             try {
                 JSONObject jsonObject = new JSONObject(response);
                 JSONObject root = jsonObject.getJSONObject("response");
-
                 JSONArray result = root.getJSONArray("results");
-
                 JSONObject item = result.getJSONObject(0);
-                String feedId = item.getString("id");
-
-                return feedId;
-            } catch (JSONException e) { }
+                return item.getString("id");
+            } catch (JSONException ignored) {
+            }
             return null;
         }
     }

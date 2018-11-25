@@ -6,7 +6,7 @@ public class Feed implements Serializable {
     private String title, category, imageUrl, feedId, webUrl;
     private boolean isPinnned;
 
-    public Feed(String feedId, String title, String category, String imageUrl,  String webUrl, boolean isPinnned){
+    public Feed(String feedId, String title, String category, String imageUrl, String webUrl, boolean isPinnned) {
         this.feedId = feedId;
         this.title = title;
         this.category = category;
@@ -15,9 +15,9 @@ public class Feed implements Serializable {
         this.isPinnned = isPinnned;
     }
 
-    public void setPinnned(boolean pinnned) { isPinnned = pinnned; }
-
-    public String getFeedId() { return feedId; }
+    public String getFeedId() {
+        return feedId;
+    }
 
     public String getTitle() {
         return title;
@@ -35,5 +35,11 @@ public class Feed implements Serializable {
         return webUrl;
     }
 
-    public boolean isPinnned() { return isPinnned; }
+    public boolean isPinnned() {
+        return isPinnned;
+    }
+
+    public void setPinnned(boolean pinnned) {
+        isPinnned = pinnned;
+    }
 }
