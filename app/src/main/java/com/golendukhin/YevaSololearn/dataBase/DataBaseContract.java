@@ -9,7 +9,8 @@ public final class DataBaseContract {
     public static class FeedEntry implements BaseColumns {
         public static final int DATABASE_VERSION = 1;
         public static final String DATABASE_NAME = "feed.db";
-        public static final String TABLE_NAME = "feeds";
+        public static final String FEEDS_TABLE_NAME = "feeds";
+        public static final String WATCHED_TABLE_NAME = "watched_items";
 
         public static final String _ID = BaseColumns._ID;
         public static final String COLUMN_FEED_ID = "feedId";

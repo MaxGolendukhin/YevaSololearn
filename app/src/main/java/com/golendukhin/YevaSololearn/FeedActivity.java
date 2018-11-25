@@ -1,10 +1,14 @@
 package com.golendukhin.YevaSololearn;
 
+import android.app.NotificationManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PersistableBundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -52,8 +56,8 @@ public class FeedActivity extends AppCompatActivity {
     private final int pageSize = 50;
     private int page = 1;
 
-    private static final String GUARDIAN_REQUEST_API_KEY = "test";
-    private static final String GUARDIAN_REQUEST_URL =
+    public static final String GUARDIAN_REQUEST_API_KEY = "test";
+    public static final String GUARDIAN_REQUEST_URL =
             "http://content.guardianapis.com/search?show-fields=thumbnail&orderBy=newest&order-date=last-modified&format=json&api-key=".concat(GUARDIAN_REQUEST_API_KEY);
 
     private boolean isPinterestStyle = true;
@@ -72,6 +76,10 @@ public class FeedActivity extends AppCompatActivity {
     private RecyclerView pinnedRecyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
+    ItemsCheckService itemsCheckService;
+
+
+
     private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -82,17 +90,34 @@ public class FeedActivity extends AppCompatActivity {
         }
     };
 
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            ItemsCheckService.LocalBinder binder = (ItemsCheckService.LocalBinder) service;
+            itemsCheckService = binder.getService();
+            //itemsCheckService.onDestroy();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {}
+    };
+
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         initActivity();
     }
 
     private void initActivity() {
         setContentView(R.layout.activity_feed_layout);
+
         jsonRequest();
+
         //runTicker();
 
         dataBaseHelper = new DataBaseHelper(this);
@@ -100,6 +125,20 @@ public class FeedActivity extends AppCompatActivity {
         initRecyclerView();
         initPinnedItemsRecyclerView();
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        itemsCheckService = new ItemsCheckService();
+        bindToService();
+        itemsCheckService.onDestroy();
+}
+
+    void bindToService() {
+        Intent intent = new Intent(FeedActivity.this, ItemsCheckService.class);
+        bindService(intent, serviceConnection, 0);
+    }
+
 
     private void initRecyclerView() {
         recyclerView = findViewById(R.id.recycler_view);
@@ -124,7 +163,7 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     private void initPinnedItemsRecyclerView() {
-        cursor = dataBaseHelper.fetchAllData();
+        cursor = dataBaseHelper.fetchAllFeedItems();
         pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
         pinnedItemsLinearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         pinnedRecyclerView.setLayoutManager(pinnedItemsLinearLayoutManager);
@@ -183,6 +222,8 @@ public class FeedActivity extends AppCompatActivity {
                                 if (!isInFeedList(newFeed)) {
                                     feedItems.add(newFeed);
                                 }
+
+                                dataBaseHelper.addWatchedItem(feedId);
                             } catch (JSONException e){
                                 e.printStackTrace();
                                 continue; //if some of fields are absent not to stop parsing request
@@ -312,7 +353,7 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     private void updatePinnedItemsCursorAdapter() {
-        cursor = dataBaseHelper.fetchAllData();
+        cursor = dataBaseHelper.fetchAllFeedItems();
         pinnedItemsCursorAdapter.swapCursor(cursor);
         if (cursor.getCount() > 0) {
             pinnedRecyclerView.setVisibility(View.VISIBLE);
@@ -358,8 +399,11 @@ public class FeedActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
+        super.onStop();
+        bindToService();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        itemsCheckService.startCheck(this, notificationManager);
         //dataBaseHelper.close();
         //cursor.close();
-        super.onStop();
     }
 }

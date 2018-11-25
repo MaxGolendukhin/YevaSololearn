@@ -19,7 +19,6 @@
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
             android:scaleType="center"
-            android:src="@drawable/placeholder"
             android:transitionName="image_transition"
             app:layout_constraintBottom_toTopOf="@+id/title_text_view"
             app:layout_constraintEnd_toEndOf="parent"
@@ -33,9 +32,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:text="SPORT"
-
-
             android:transitionName="category_transition"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -48,7 +44,6 @@
             android:layout_marginBottom="8dp"
             android:fontFamily="sans-serif"
             android:singleLine="false"
-            android:text="Some fake new I'd like to a placeholder"
             android:transitionName="title_transition"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/feed_image_view"

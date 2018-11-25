@@ -21,5 +21,10 @@
         </activity>
 
         <activity android:name=".DetailsActivity" />
+
+        <service android:name=".ItemsCheckService"></service>
+
     </application>
+
+
 </manifest>

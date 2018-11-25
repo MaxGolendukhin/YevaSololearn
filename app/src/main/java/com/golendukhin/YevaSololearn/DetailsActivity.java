@@ -72,13 +72,13 @@ public class DetailsActivity extends AppCompatActivity {
 
             case R.id.pinned_menu:
                 feed.setPinnned(false);
-                dataBaseHelper.removeItem(feed);
+                dataBaseHelper.removeFeedItem(feed);
                 supportInvalidateOptionsMenu();
                 return true;
 
             case R.id.unpinned_menu:
                 feed.setPinnned(true);
-                dataBaseHelper.addItem(feed);
+                dataBaseHelper.addFeedItem(feed);
                 supportInvalidateOptionsMenu();
                 return true;
         }
