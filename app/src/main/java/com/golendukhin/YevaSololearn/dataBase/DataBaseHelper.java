@@ -3,12 +3,8 @@ package com.golendukhin.YevaSololearn.dataBase;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
-import android.database.DatabaseUtils;
-
 import com.golendukhin.YevaSololearn.Feed;
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_CATEGORY;
 import static com.golendukhin.YevaSololearn.dataBase.DataBaseContract.FeedEntry.COLUMN_FEED_ID;
@@ -73,7 +69,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase sqLiteDatabase = getWritableDatabase();
         String selection = COLUMN_FEED_ID + " = ?";
         String[] selectionArgs = { feed.getFeedId() };
-
         return sqLiteDatabase.delete(FEEDS_TABLE_NAME, selection, selectionArgs) > 0;
     }
 
@@ -81,18 +76,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase sqLiteDatabase = getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_FEED_ID, feedId);
-
-//        long a = sqLiteDatabase.insert(WATCHED_TABLE_NAME, null, contentValues);
-//        Cursor c = sqLiteDatabase.query(WATCHED_TABLE_NAME, null, null, null, null, null, null);
-//        int sfdsa = c.getCount();
-//
-////        String f = DatabaseUtils.dumpCursorToString(c);
-//        while (c.moveToNext()) {
-//            String  ss = c.getString(c.getColumnIndex(COLUMN_FEED_ID));
-//        }
-
-
-
         return sqLiteDatabase.insert(WATCHED_TABLE_NAME, null, contentValues) != -1;
     }
 
@@ -100,18 +83,23 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase sqLiteDatabase = getReadableDatabase();
         String selection = COLUMN_FEED_ID + " = ?";
         String[] selectionArgs = { itemId };
-
-//        Cursor c = sqLiteDatabase.query(
-//                        WATCHED_TABLE_NAME,
-//                null,
-//                selection
-//                ,selectionArgs
-//                ,null
-//                ,null
-//                ,null);
-
         return sqLiteDatabase.query(
                 WATCHED_TABLE_NAME,
+                null,
+                selection
+                ,selectionArgs
+                ,null
+                ,null
+                ,null
+        ).getCount() > 0;
+    }
+
+    public boolean inPinnedItems(String itemId) {
+        SQLiteDatabase sqLiteDatabase = getReadableDatabase();
+        String selection = COLUMN_FEED_ID + " = ?";
+        String[] selectionArgs = { itemId };
+        return sqLiteDatabase.query(
+                FEEDS_TABLE_NAME,
                 null,
                 selection
                 ,selectionArgs

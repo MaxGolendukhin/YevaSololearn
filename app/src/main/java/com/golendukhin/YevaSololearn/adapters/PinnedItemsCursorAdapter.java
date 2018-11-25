@@ -45,7 +45,7 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder viewHolder, Cursor cursor) {
+    public void onBindViewHolder(ViewHolder viewHolder, final Cursor cursor) {
         String title = cursor.getString(cursor.getColumnIndex(COLUMN_TITLE));
         String category = cursor.getString(cursor.getColumnIndex(COLUMN_CATEGORY));
         String imageURL = cursor.getString(cursor.getColumnIndex(COLUMN_IMAGE_URL));
@@ -71,6 +71,7 @@ public class PinnedItemsCursorAdapter extends CursorRecyclerViewAdapter<PinnedIt
             public void onClick(View view) {
                 Intent intent = new Intent(context, DetailsActivity.class);
                 intent.putExtra("feed", feed);
+                intent.putExtra("cursorPosition", cursor.getPosition());
 
                 Pair[] pairs = new Pair[3];
                 pairs[0] = new Pair<View, String>(titleTextView, "title_transition");

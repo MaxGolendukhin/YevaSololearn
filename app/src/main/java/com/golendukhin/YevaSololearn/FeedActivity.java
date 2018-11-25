@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
@@ -37,48 +36,36 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
-
 
 import static com.golendukhin.YevaSololearn.adapters.PinnedItemsCursorAdapter.PINNED_ITEMS_CURSOR_ADAPTER;
 import static com.golendukhin.YevaSololearn.adapters.StaggeredRecyclerViewAdapter.STAGGERED_RECYCLE_VIEW_ADAPTER;
 
 public class FeedActivity extends AppCompatActivity {
-    private static final int NUM_COLUMNS = 3;
-    private static final int INTERVAL = 10000;
-
-    private ArrayList<Feed> feedItems = new ArrayList<>();
-    private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter;
-    private PinnedItemsCursorAdapter pinnedItemsCursorAdapter;
-    private ProgressBar progressBar;
-
-    private final int pageSize = 50;
-    private int page = 1;
-
     public static final String GUARDIAN_REQUEST_API_KEY = "test";
     public static final String GUARDIAN_REQUEST_URL =
             "http://content.guardianapis.com/search?show-fields=thumbnail&orderBy=newest&order-date=last-modified&format=json&api-key=".concat(GUARDIAN_REQUEST_API_KEY);
-
+    private static final int NUM_COLUMNS = 3;
+    private static final int PAGE_SIZE = 50;
+    private ArrayList<Feed> feedItems = new ArrayList<>();
+    private int page = 1;
     private boolean isPinterestStyle = true;
 
-    RecyclerView recyclerView;
-
+    private ProgressBar progressBar;
     private Menu menu;
 
     private StaggeredGridLayoutManager staggeredGridLayoutManager;
     private LinearLayoutManager listItemsLayoutManager;
     private LinearLayoutManager pinnedItemsLinearLayoutManager;
-
-    DataBaseHelper dataBaseHelper;
-    Cursor cursor;
-
     private RecyclerView pinnedRecyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
+    private RecyclerView recyclerView;
+    private StaggeredRecyclerViewAdapter staggeredRecyclerViewAdapter;
+    private PinnedItemsCursorAdapter pinnedItemsCursorAdapter;
 
-    ItemsCheckService itemsCheckService;
+    private DataBaseHelper dataBaseHelper;
+    private Cursor cursor;
 
-
+    private ItemsCheckService itemsCheckService;
 
     private RecyclerView.OnScrollListener onScrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -95,174 +82,59 @@ public class FeedActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             ItemsCheckService.LocalBinder binder = (ItemsCheckService.LocalBinder) service;
             itemsCheckService = binder.getService();
-            //itemsCheckService.onDestroy();
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName componentName) {}
+        public void onServiceDisconnected(ComponentName componentName) {
+        }
     };
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-        initActivity();
-    }
-
-    private void initActivity() {
         setContentView(R.layout.activity_feed_layout);
-
-        jsonRequest();
-
-        //runTicker();
-
         dataBaseHelper = new DataBaseHelper(this);
+
+        int firstVisiblePosition = 0;
+        int pinnedItemsFirstVisiblePosition = 0;
+        if (savedInstanceState != null) {
+            firstVisiblePosition = savedInstanceState.getInt("firstVisiblePosition");
+            pinnedItemsFirstVisiblePosition = savedInstanceState.getInt("pinnedItemsFirstVisiblePosition");
+            isPinterestStyle = savedInstanceState.getBoolean("isPinterestStyle");
+            feedItems = (ArrayList<Feed>) savedInstanceState.getSerializable("feedItems");
+        } else { //normal mode
+            jsonRequest();
+        }
+
         invalidateMenu();
         initRecyclerView();
         initPinnedItemsRecyclerView();
+
+        if (savedInstanceState != null) {
+            if (isPinterestStyle) {
+                staggeredRecyclerViewAdapter.notifyDataSetChanged();
+            } else {
+                recyclerViewAdapter.notifyDataSetChanged();
+            }
+            recyclerView.scrollToPosition(firstVisiblePosition);
+            pinnedRecyclerView.scrollToPosition(pinnedItemsFirstVisiblePosition);
+        }
     }
 
+    /**
+     * If service, that checks for new items is still running need to stop it
+     */
     @Override
     public void onStart() {
         super.onStart();
         itemsCheckService = new ItemsCheckService();
         bindToService();
         itemsCheckService.onDestroy();
-}
-
-    void bindToService() {
-        Intent intent = new Intent(FeedActivity.this, ItemsCheckService.class);
-        bindService(intent, serviceConnection, 0);
     }
 
-
-    private void initRecyclerView() {
-        recyclerView = findViewById(R.id.recycler_view);
-
-        staggeredRecyclerViewAdapter = new StaggeredRecyclerViewAdapter(feedItems, this);
-        staggeredGridLayoutManager = new StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayoutManager.VERTICAL);
-
-        recyclerViewAdapter = new RecyclerViewAdapter(feedItems, this);
-        listItemsLayoutManager = new LinearLayoutManager(this);
-
-        if(isPinterestStyle) {
-            recyclerView.setLayoutManager(staggeredGridLayoutManager);
-            recyclerView.setAdapter(staggeredRecyclerViewAdapter);
-        } else {
-            recyclerView.setLayoutManager(listItemsLayoutManager);
-            recyclerView.setAdapter(recyclerViewAdapter );
-        }
-
-        recyclerView.addOnScrollListener(onScrollListener);
-        recyclerView.setLayoutManager(staggeredGridLayoutManager);
-        recyclerView.setAdapter(staggeredRecyclerViewAdapter);
-    }
-
-    private void initPinnedItemsRecyclerView() {
-        cursor = dataBaseHelper.fetchAllFeedItems();
-        pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
-        pinnedItemsLinearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        pinnedRecyclerView.setLayoutManager(pinnedItemsLinearLayoutManager);
-        pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
-        pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
-
-        if (cursor.getCount() > 0) {
-            pinnedRecyclerView.setVisibility(View.VISIBLE);
-        } else {
-            pinnedRecyclerView.setVisibility(View.GONE);
-        }
-    }
-
-    private void runTicker() {
-        final Handler handler = new Handler();
-        Timer timer = new Timer(false);
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                handler.post( new Runnable() {
-                    @Override
-                    public void run() {
-                        jsonRequest();
-                    }
-                });
-            }
-        };
-        timer.scheduleAtFixedRate(timerTask, 0, INTERVAL);
-    }
-
-    private void jsonRequest() {
-        String request = GUARDIAN_REQUEST_URL.concat("&page-size=").concat(String.valueOf(pageSize)).concat("&page=").concat(String.valueOf(page));
-        progressBar = findViewById(R.id.progress_bar);
-        progressBar.setVisibility(View.VISIBLE);
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(request, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                if (response != null) {
-                    JSONObject root;
-                    try {
-                        root = response.getJSONObject("response");
-                        JSONArray result = root.getJSONArray("results");
-                        for (int i = 0; i < result.length(); i++) {
-                            try {
-                                JSONObject item = result.getJSONObject(i);
-                                String title = item.getString("webTitle");
-                                String category = item.getString("sectionName");
-
-                                JSONObject fields = item.getJSONObject("fields");
-                                String imageUrl = fields.getString("thumbnail");
-                                String feedId = item.getString("id");
-                                String webUrl = item.getString("webUrl");
-
-                                Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl, false);
-                                if (!isInFeedList(newFeed)) {
-                                    feedItems.add(newFeed);
-                                }
-
-                                dataBaseHelper.addWatchedItem(feedId);
-                            } catch (JSONException e){
-                                e.printStackTrace();
-                                continue; //if some of fields are absent not to stop parsing request
-                            }
-                        }
-                    } catch (JSONException e){
-                        e.printStackTrace();
-                    }
-                }
-                //Log.e("!!!!!!!!!!!!!!!!!!!!!", String.valueOf(feedItems.size()));
-                //weird peculiarity if adapter is set, but data is still not fetched, need to update adapter
-                if (staggeredRecyclerViewAdapter != null)
-                    staggeredRecyclerViewAdapter.notifyDataSetChanged();
-                progressBar.setVisibility(View.INVISIBLE);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(), "Problems with your internet connection", Toast.LENGTH_LONG).show();
-            }
-        });
-        requestQueue.add(jsonObjectRequest);
-        page++;
-    }
-
-    private boolean isInFeedList(Feed newFeed) {
-        for (Feed feed : feedItems) {
-            if (feed.getFeedId().equals(newFeed.getFeedId())) return true;
-        }
-        return false;
-    }
-
-    private void invalidateMenu() {
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setDisplayShowHomeEnabled(false);
-    }
-
+    /**
+     * Menu is created dynamically, depend on which view state(usual or staggered) is chosen
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         this.menu = menu;
@@ -270,13 +142,6 @@ public class FeedActivity extends AppCompatActivity {
         inflater.inflate(R.menu.feed_activity_menu, menu);
         updateOptionsMenu();
         return super.onCreateOptionsMenu(menu);
-    }
-
-    private void updateOptionsMenu() {
-        MenuItem pinterestStyleMenu = menu.findItem(R.id.pinterest_style_menu);
-        MenuItem listStyleMenu = menu.findItem(R.id.list_style_menu);
-        pinterestStyleMenu.setVisible(!isPinterestStyle);
-        listStyleMenu.setVisible(isPinterestStyle);
     }
 
     @Override
@@ -308,53 +173,212 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     /**
-     * Method with most complicated logic
-     * First need to obtain feed item and boolean variable if article pinned was switched or not
-     * If state was not switched, there is nothing to do anymore here, quit
-     * If it was, then need to obtain first visible position in pinned articles horizontal view
-     * Then need to update this view in any cases with swapping the cursor with new one
-     * If state was switched within staggered adapter then need to find this item in array list that populate it
-     * and remove this item, notifying adapter(might be of two types) data has changed
-     * In this case pinned items view is scrolled to the end
-     * If state was switched from pinned items adapter, then pinned recycler view was shortened minus one position
-     * Need just scroll to prevously defined first visible position
+     * If screen is rotated need to keep first visible positions of both recycler views,
+     * is it a staggered view or not and list of items to populate recycler view
+     * and not to fetch data again
+     */
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean("isPinterestStyle", isPinterestStyle);
+        savedInstanceState.putInt("firstVisiblePosition", getFirstVisiblePosition());
+        savedInstanceState.putInt("pinnedItemsFirstVisiblePosition", pinnedItemsLinearLayoutManager.findFirstVisibleItemPosition());
+        savedInstanceState.putSerializable("feedItems", feedItems);
+    }
+
+    /**
+     * Method is triggered after returning from details activity
+     * Method handles if item was pinned or unpinned and add or remove from vies
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Feed feed = (Feed)data.getSerializableExtra("feed");
+        Feed feed = (Feed) data.getSerializableExtra("feed");
         boolean isSwitched = data.getBooleanExtra("isSwitched", false);
-        if (!isSwitched) {
-            return;
+        int cursorPosition = data.getIntExtra("cursorPosition", 0);
+        dataBaseHelper = new DataBaseHelper(this);
+        cursor = dataBaseHelper.fetchAllFeedItems();
+        updatePinnedItemsLayoutVisibility();
+
+        if (cursor.getCount() > 0) {
+            pinnedItemsCursorAdapter.swapCursor(cursor);
+            pinnedItemsLinearLayoutManager.scrollToPosition(cursorPosition);
         }
 
-        int pinnedItemsFirstVisiblePosition = pinnedItemsLinearLayoutManager.findFirstVisibleItemPosition();
-        updatePinnedItemsCursorAdapter();
-
-        if (requestCode == STAGGERED_RECYCLE_VIEW_ADAPTER) {
-            String feedId = feed.getFeedId();
-            int index = 0;
-            for (int i = 0; i < feedItems.size(); i++) {
-                if (feedItems.get(i).getFeedId().equals(feedId)) {
-                    index = i;
-                    break;
+        if (isSwitched) {
+            if (requestCode == STAGGERED_RECYCLE_VIEW_ADAPTER) {
+                String feedId = feed.getFeedId();
+                int index = 0;
+                for (int i = 0; i < feedItems.size(); i++) {
+                    if (feedItems.get(i).getFeedId().equals(feedId)) {
+                        index = i;
+                        break;
+                    }
                 }
-            }
-            feedItems.remove(index);
+                feedItems.remove(index);
 
-            if (isPinterestStyle) {
-                staggeredRecyclerViewAdapter.notifyDataSetChanged();
-            } else {
-                recyclerViewAdapter.notifyDataSetChanged();
+                if (isPinterestStyle) {
+                    staggeredRecyclerViewAdapter.notifyDataSetChanged();
+                } else {
+                    recyclerViewAdapter.notifyDataSetChanged();
+                }
+                pinnedRecyclerView.scrollToPosition(cursor.getCount() - 1);
+            } else if (requestCode == PINNED_ITEMS_CURSOR_ADAPTER) {
+                pinnedRecyclerView.scrollToPosition(cursorPosition);
             }
-            pinnedRecyclerView.scrollToPosition(cursor.getCount() - 1);
-        } else if (requestCode == PINNED_ITEMS_CURSOR_ADAPTER) {
-            pinnedRecyclerView.scrollToPosition(pinnedItemsFirstVisiblePosition);
+        } else {
+            pinnedRecyclerView.scrollToPosition(cursorPosition);
         }
     }
 
-    private void updatePinnedItemsCursorAdapter() {
+    /**
+     * If app is stopped need to start service that checks for new items
+     * Also closes cursor and dataBaseHelper to avoid memory leaks
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        bindToService();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        itemsCheckService.startCheck(this, notificationManager);
+        dataBaseHelper.close();
+        cursor.close();
+    }
+
+    /**
+     * Items are fed from Guardian API and updates feedItems with items, that are not already fetched
+     * and that sre not in cursor.
+     * Also ids of all items put into the database to check via service for new ones
+     * Adapter is notified.
+     * If internet connection is bad user is notified via toast message
+     */
+    private void jsonRequest() {
+        String request = GUARDIAN_REQUEST_URL.concat("&page-size=").concat(String.valueOf(PAGE_SIZE)).concat("&page=").concat(String.valueOf(page));
+        progressBar = findViewById(R.id.progress_bar);
+        progressBar.setVisibility(View.VISIBLE);
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(request, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                if (response != null) {
+                    JSONObject root;
+                    try {
+                        root = response.getJSONObject("response");
+                        JSONArray result = root.getJSONArray("results");
+                        for (int i = 0; i < result.length(); i++) {
+                            try {
+                                JSONObject item = result.getJSONObject(i);
+                                String title = item.getString("webTitle");
+                                String category = item.getString("sectionName");
+
+                                JSONObject fields = item.getJSONObject("fields");
+                                String imageUrl = fields.getString("thumbnail");
+                                String feedId = item.getString("id");
+                                String webUrl = item.getString("webUrl");
+
+                                Feed newFeed = new Feed(feedId, title, category, imageUrl, webUrl, false);
+                                if (!isInFeedList(newFeed) && !isInPinnedItems(newFeed)) {
+                                    feedItems.add(newFeed);
+                                }
+
+                                dataBaseHelper.addWatchedItem(feedId);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+//                                continue; //if some of fields are absent not to stop parsing request
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (staggeredRecyclerViewAdapter != null)
+                    staggeredRecyclerViewAdapter.notifyDataSetChanged();
+                progressBar.setVisibility(View.INVISIBLE);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getApplicationContext(), "Problems with your internet connection", Toast.LENGTH_LONG).show();
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+        page++;
+    }
+
+    /**
+     * Auxiliary method to check if item already in feedItems
+     *
+     * @param newFeed to check
+     * @return true if in list, false otherwise
+     */
+    private boolean isInFeedList(Feed newFeed) {
+        for (Feed feed : feedItems) {
+            if (feed.getFeedId().equals(newFeed.getFeedId())) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Auxiliary method to check if item already in cursor
+     *
+     * @param newFeed to check
+     * @return true if in cursor, false otherwise
+     */
+    private boolean isInPinnedItems(Feed newFeed) {
+        return dataBaseHelper.inPinnedItems(newFeed.getFeedId());
+    }
+
+    /**
+     * Invalidates menu icons visibility for this activity
+     */
+    private void invalidateMenu() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayShowTitleEnabled(false);
+            actionBar.setDisplayShowHomeEnabled(false);
+        }
+    }
+
+    /**
+     * Initiates recycler view depending on if isPinterestStyle or not
+     */
+    private void initRecyclerView() {
+        recyclerView = findViewById(R.id.recycler_view);
+
+        staggeredRecyclerViewAdapter = new StaggeredRecyclerViewAdapter(feedItems, this);
+        staggeredGridLayoutManager = new StaggeredGridLayoutManager(NUM_COLUMNS, LinearLayoutManager.VERTICAL);
+
+        recyclerViewAdapter = new RecyclerViewAdapter(feedItems, this);
+        listItemsLayoutManager = new LinearLayoutManager(this);
+
+        if (isPinterestStyle) {
+            recyclerView.setLayoutManager(staggeredGridLayoutManager);
+            recyclerView.setAdapter(staggeredRecyclerViewAdapter);
+        } else {
+            recyclerView.setLayoutManager(listItemsLayoutManager);
+            recyclerView.setAdapter(recyclerViewAdapter);
+        }
+
+        recyclerView.addOnScrollListener(onScrollListener);
+    }
+
+    /**
+     * Initiates pinned items recycler view depending on if pinned items exists or not
+     */
+    private void initPinnedItemsRecyclerView() {
         cursor = dataBaseHelper.fetchAllFeedItems();
-        pinnedItemsCursorAdapter.swapCursor(cursor);
+
+        pinnedRecyclerView = findViewById(R.id.pinned_items_recycler_view);
+        pinnedItemsLinearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        pinnedRecyclerView.setLayoutManager(pinnedItemsLinearLayoutManager);
+        pinnedItemsCursorAdapter = new PinnedItemsCursorAdapter(this, cursor);
+        pinnedRecyclerView.setAdapter(pinnedItemsCursorAdapter);
+        updatePinnedItemsLayoutVisibility();
+    }
+
+    /**
+     * Auxiliary to hide or show pinned recycler view depending on if pinned items exists or not
+     */
+    private void updatePinnedItemsLayoutVisibility() {
         if (cursor.getCount() > 0) {
             pinnedRecyclerView.setVisibility(View.VISIBLE);
         } else {
@@ -362,48 +386,34 @@ public class FeedActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putBoolean("isPinterestStyle", isPinterestStyle);
-        savedInstanceState.putInt("firstVisiblePosition", getFirstVisiblePosition());
-        savedInstanceState.putSerializable("feedItems", feedItems);
-        //todo another list with raw data
+    /**
+     * Binds to service to check for new items
+     */
+    void bindToService() {
+        Intent intent = new Intent(FeedActivity.this, ItemsCheckService.class);
+        bindService(intent, serviceConnection, 0);
     }
 
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        initActivity();
-        int firstVisiblePosition = savedInstanceState.getInt("firstVisiblePosition");
-        isPinterestStyle = savedInstanceState.getBoolean("firstVisiblePosition");
-        feedItems = (ArrayList<Feed>)savedInstanceState.getSerializable("feedItems");
-
-        if (isPinterestStyle) {
-            staggeredRecyclerViewAdapter.notifyDataSetChanged();
-        } else {
-            recyclerViewAdapter.notifyDataSetChanged();
-        }
-        pinnedRecyclerView.scrollToPosition(firstVisiblePosition);
+    /**
+     * Invalidates visibility of icons depending what state of view app is in (staggered or simple list)
+     */
+    private void updateOptionsMenu() {
+        MenuItem pinterestStyleMenu = menu.findItem(R.id.pinterest_style_menu);
+        MenuItem listStyleMenu = menu.findItem(R.id.list_style_menu);
+        pinterestStyleMenu.setVisible(!isPinterestStyle);
+        listStyleMenu.setVisible(isPinterestStyle);
     }
 
+    /**
+     * @return first visible position depending what state of view app is in (staggered or simple list)
+     */
     private int getFirstVisiblePosition() {
-        int [] firstVisiblePositions = null;
+        int[] firstVisiblePositions;
         if (isPinterestStyle) {
-            firstVisiblePositions = staggeredGridLayoutManager.findFirstVisibleItemPositions(firstVisiblePositions);
+            firstVisiblePositions = staggeredGridLayoutManager.findFirstVisibleItemPositions(null);
             return firstVisiblePositions[0];
         } else {
             return listItemsLayoutManager.findFirstVisibleItemPosition();
         }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        bindToService();
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        itemsCheckService.startCheck(this, notificationManager);
-        //dataBaseHelper.close();
-        //cursor.close();
     }
 }

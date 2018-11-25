@@ -95,7 +95,6 @@ public class DetailsActivity extends AppCompatActivity {
     public void onBackPressed() {
         Intent returnIntent = getIntent();
         returnIntent.putExtra("feed", feed);
-//        boolean a = defineIfLikeSwitched();
         returnIntent.putExtra("isSwitched", defineIfLikeSwitched());
         setResult(RESULT_OK, returnIntent);
         super.onBackPressed();
@@ -110,5 +109,4 @@ public class DetailsActivity extends AppCompatActivity {
         }
         return isSwitched;
     }
-
 }
