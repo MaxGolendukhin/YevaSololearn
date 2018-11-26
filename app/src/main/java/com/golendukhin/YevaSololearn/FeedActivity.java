@@ -5,9 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -48,7 +50,7 @@ public class FeedActivity extends AppCompatActivity {
     private static final int PAGE_SIZE = 50;
     private ArrayList<Feed> feedItems = new ArrayList<>();
     private int page = 1;
-    private boolean isPinterestStyle = true;
+    private boolean isPinterestStyle;
 
     private ProgressBar progressBar;
     private Menu menu;
@@ -94,6 +96,9 @@ public class FeedActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed_layout);
         dataBaseHelper = new DataBaseHelper(this);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        isPinterestStyle = sharedPreferences.getBoolean("isPinterestStyle", true);
 
         int firstVisiblePosition = 0;
         int pinnedItemsFirstVisiblePosition = 0;
@@ -148,12 +153,18 @@ public class FeedActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int firstVisiblePosition = getFirstVisiblePosition();
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
         switch (item.getItemId()) {
             case R.id.pinterest_style_menu:
                 recyclerView.setLayoutManager(staggeredGridLayoutManager);
                 recyclerView.setAdapter(staggeredRecyclerViewAdapter);
 
                 isPinterestStyle = !isPinterestStyle;
+                editor.putBoolean("isPinterestStyle", isPinterestStyle);
+                editor.apply();
+
                 updateOptionsMenu();
                 staggeredGridLayoutManager.scrollToPosition(firstVisiblePosition);
 
@@ -164,6 +175,9 @@ public class FeedActivity extends AppCompatActivity {
                 recyclerView.setAdapter(recyclerViewAdapter);
 
                 isPinterestStyle = !isPinterestStyle;
+                editor.putBoolean("isPinterestStyle", isPinterestStyle);
+                editor.apply();
+
                 updateOptionsMenu();
                 listItemsLayoutManager.scrollToPosition(firstVisiblePosition);
 
@@ -283,15 +297,19 @@ public class FeedActivity extends AppCompatActivity {
                                 dataBaseHelper.addWatchedItem(feedId);
                             } catch (JSONException e) {
                                 e.printStackTrace();
-//                                continue; //if some of fields are absent not to stop parsing request
                             }
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
-                if (staggeredRecyclerViewAdapter != null)
-                    staggeredRecyclerViewAdapter.notifyDataSetChanged();
+                if (isPinterestStyle) {
+                    if (staggeredRecyclerViewAdapter != null)
+                        staggeredRecyclerViewAdapter.notifyDataSetChanged();
+                } else {
+                    if (recyclerViewAdapter != null)
+                        recyclerViewAdapter.notifyDataSetChanged();
+                }
                 progressBar.setVisibility(View.INVISIBLE);
             }
         }, new Response.ErrorListener() {
